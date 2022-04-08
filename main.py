@@ -4,12 +4,23 @@ from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 
 
-def load_data(name):
-    return pd.read_csv(name,
+def load_data(file_location):
+    """
+    reads the data from our .data file (which is basically .csv)
+    :param file_location: the location of the file
+    :return: the contents of the file as a pandas dataframe
+    """
+    return pd.read_csv(file_location,
                        names=['sepal_length', 'sepal_width', 'petal_length', 'petal_width', 'target'])
 
 
 def drop_nan(data):
+    """
+    prints how many NaN we have per column
+    drops the NaN rows from our dataframe
+    :param data: the data
+    :return: the data, cleaned from NaN
+    """
     print("\n", data.isna().sum())
     data.dropna(inplace=True)
     # This line screwed me for hours. When dropping, it doesn't recalculate index
@@ -19,11 +30,23 @@ def drop_nan(data):
 
 
 def encode_data(data):
+    """
+    encodes the categorical data into int
+    :param data: the data
+    :return: the data, where the 'target' column strings are replaced with numbers
+    """
     data['target'] = preprocessing.LabelEncoder().fit_transform(data['target'])
     return data
 
 
 def normalize_data(data):
+    """
+    pops the 'target' column from our data
+    normalizes the data
+    and prints how the mean and the variance changed for the data
+    :param data: the data
+    :return: data, without 'target' but normalized, along with target (now a pandas dataframe of its own)
+    """
     mean = data[['sepal_length', 'sepal_width', 'petal_length', 'petal_width']].mean()
     variance = data[['sepal_length', 'sepal_width', 'petal_length', 'petal_width']].var()
 
@@ -41,47 +64,49 @@ def normalize_data(data):
 
 
 def pca_data(data):
+    """
+    reduces the features of our data from 4 to 2 dimensions
+    :param data: the data
+    :return: the data, now in two dimensions 'D1' and 'D2'
+    """
     principal = PCA(n_components=2)
     principal.fit(data)
     return pd.DataFrame(principal.transform(data), columns=['D1', 'D2'])
 
 
-def plot_data(data, data_2d):
-
-    Iris_setosa = []
-    Iris_versicolor = []
-    Iris_virginica = []
-    for i in range(len(data_2d)):
-        if data.iloc[i]['target'] == 0:
-            Iris_setosa.append(data_2d[i])
-        elif data.iloc[i]['target'] == 1:
-            Iris_versicolor.append(data_2d[i])
-        else:
-            Iris_virginica.append(data_2d[i])
-
-    plt.scatter([i[0] for i in Iris_setosa], [i[1] for i in Iris_setosa])
-    plt.scatter([i[0] for i in Iris_versicolor], [i[1] for i in Iris_versicolor])
-    plt.scatter([i[0] for i in Iris_virginica], [i[1] for i in Iris_virginica])
-    plt.legend(["setosa", "versicolor", "virginica"])
+def plot_data(data, data_2d, target):
+    """
+    shows a scatter plot of our data points
+    X and Y axis being the extracted features and the dots are colored by the corresponding 'target'
+    then, shows a box plot of the data columns - the initial features
+    :param data: the data
+    :param data_2d: the data, normalized and 2D with new extracted features
+    :param target: the 'target' column we had initially, now about to merge with "data_2d" so we know the rows' origins
+    """
+    data_2d['color'] = target.map({0: 'Red', 1: 'Blue', 2: 'Black'})
+    data_2d.plot.scatter(x="D1", y="D2", c="color")
     plt.show()
-
-    data.drop(['target'])
-    fig = plt.figure(figsize=(6, 4))
-    ax = fig.add_axes([0, 0, 1, 1])
-    bp = ax.boxplot(data)
+    data.boxplot(column=['sepal_length', 'sepal_width', 'petal_length', 'petal_width'])
     plt.show()
 
 
-def run_program(name):
-    data = load_data(name)
+def run_program(file_location):
+    """
+    runs the program
+    by first loading the data
+    then dropping any row with a NaN entry
+    next up, it encodes the categorical data
+    and then normalizes the range of our data
+    after that, two new features will be extracted from the 4 we initially had
+    and finally we plot some charts
+    :param file_location: the location of our data file
+    """
+    data = load_data(file_location)
     data = drop_nan(data)
     data = encode_data(data)
     normalized_data, target = normalize_data(data)
     data_2d = pca_data(normalized_data)
-
-    data_2d['color'] = target.map({0: 'Red', 1: 'Blue', 2: 'Black'})
-    ax = data_2d.plot.scatter(x="D1", y="D2", c="color")
-    plt.show()
+    plot_data(data, data_2d, target)
 
 
 if __name__ == '__main__':
