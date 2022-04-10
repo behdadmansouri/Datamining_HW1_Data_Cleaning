@@ -47,15 +47,16 @@ def normalize_data(data):
     :param data: the data
     :return: data, without 'target' but normalized, along with target (now a pandas dataframe of its own)
     """
-    mean = data[['sepal_length', 'sepal_width', 'petal_length', 'petal_width']].mean()
-    variance = data[['sepal_length', 'sepal_width', 'petal_length', 'petal_width']].var()
-
     target = data.pop('target')
+
+    mean = data.mean()
+    variance = data.var()
+
     std_data = preprocessing.StandardScaler().fit_transform(data)
     std_data = pd.DataFrame(std_data, columns=['sepal_length', 'sepal_width', 'petal_length', 'petal_width'])
 
-    mean2 = std_data[['sepal_length', 'sepal_width', 'petal_length', 'petal_width']].mean()
-    variance2 = std_data[['sepal_length', 'sepal_width', 'petal_length', 'petal_width']].var()
+    mean2 = std_data.mean()
+    variance2 = std_data.var()
 
     print("\n\nVariances:\n{}".format(pd.concat({'before': variance, 'after': variance2}, axis=1)))
     print("\n\nMeans:\n{}".format(pd.concat({'before': mean, 'after': mean2}, axis=1)))
